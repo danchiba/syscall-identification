@@ -1,7 +1,7 @@
 #include "syscall_identification.h"
 
 vector<Syscall *> *get_all_syscalls(CodeObject *codeObject);
-void print_block(Block *block);
+void create_syscall_list(vector<Syscall *> *syscall_list);
 
 int main(int argc, char *argv[])
 {
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 	cout << dec << syscall_list->size() << endl
 		 << endl;
 
-	
+	create_syscall_list(syscall_list);
 	return 0;
 }
 
@@ -87,18 +87,14 @@ vector<Syscall *> *get_all_syscalls(CodeObject *codeObject)
 	return syscall_list;
 }
 
-void print_block(Block *block)
+void create_syscall_list(vector<Syscall *> *syscall_list)
 {
-	Block::Insns instructions;
-	block->getInsns(instructions);
-
-	for (auto k = instructions.begin(); k != instructions.end(); ++k)
+	for (auto i = syscall_list->begin(); i != syscall_list->end(); ++i)
 	{
-		Instruction::Ptr instr = k->second;
-		Address addr = k->first;
+		Syscall *sc = *i;
 
-		cout << hex << addr << ": " << instr->format() << endl;
+		int a = sc->get_syscall_number();
+		//cout << a << endl;
+		//break;
 	}
-	cout << dec;
 }
-

@@ -10,4 +10,4 @@ include_directories(/usr/local/include)
 
 target_compile_options(identify_syscalls PRIVATE -g)
 
-target_link_libraries(identify_syscalls parseAPI dyninstAPI instructionAPI symtabAPI patchAPI)
+target_link_libraries(identify_syscalls parseAPI dyninstAPI instructionAPI symtabAPI common)
