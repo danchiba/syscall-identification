@@ -4,7 +4,7 @@ set (CMAKE_CXX_STANDARD 11)
 
 project(syscall_identification CXX)
 
-add_executable(identify_syscalls main.cpp Syscall.cpp)
+add_executable(identify_syscalls main.cpp Syscall.cpp instruction_parser.cpp utils.cpp)
 
 include_directories(/usr/local/include)
 
