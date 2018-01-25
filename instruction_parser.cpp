@@ -61,7 +61,7 @@ bool instruction_is_mov(Instruction::Ptr instr)
     return false;
 }
 
-bool instruction_is_self_xor(Instruction::Ptr instr, Address addr)
+bool instruction_is_self_xor(Instruction::Ptr instr)
 {
     //printf("Self XOR check for %lx: %s\n", addr, instr->format().c_str());
     entryID op = instr->getOperation().getID();

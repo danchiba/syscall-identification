@@ -91,7 +91,7 @@ void Syscall::get_value_in_register(Block *curr_block, string reg, Address start
                 }
             }
 
-            else if (instruction_is_self_xor(instr, addr))
+            else if (instruction_is_self_xor(instr))
             {
                 possible_sc_nums->push_back(0);
                 return;

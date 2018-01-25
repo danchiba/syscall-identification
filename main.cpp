@@ -15,8 +15,6 @@ int main(int argc, char *argv[])
 
 	SymtabCodeSource *sts;
 	CodeObject *co;
-	PatchObject *po, *clonedpo;
-	Instruction::Ptr instr;
 	SymtabAPI::Symtab *symTab;
 	vector<Syscall *> *syscall_list;
 
@@ -31,7 +29,7 @@ int main(int argc, char *argv[])
 	co->parse();
 
 	syscall_list = get_all_syscalls(co);
-	printf("%zd syscalls found\n\n", syscall_list->size());
+	printf("%zd syscalls found\n", syscall_list->size());
 
 	create_syscall_num_list(syscall_list);
 	return 0;
@@ -47,7 +45,7 @@ vector<Syscall *> *get_all_syscalls(CodeObject *codeObject)
 		cout << "No functions in file\n";
 		exit(1);
 	}
-	cout << funcs.size() << " functions found\n";
+	//cout << funcs.size() << " functions found\n";
 
 	for (auto f1 = funcs.begin(); f1 != funcs.end(); ++f1)
 	{
@@ -111,9 +109,10 @@ void create_syscall_num_list(vector<Syscall *> *syscall_list)
 		}
 	}
 
-	printf("Final syscall list:\n");
-	for (auto i = sc_num_list.begin(); i != sc_num_list.end(); ++i)
-	{
-		printf("%d\n", *i);
-	}
+	printf("%zd unique syscalls were detected:\n", sc_num_list.size());
+	// for (auto i = sc_num_list.begin(); i != sc_num_list.end(); ++i)
+	// {
+	// 	printf("%d\n", *i);
+	// }
+	cout << endl;
 }

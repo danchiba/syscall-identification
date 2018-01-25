@@ -48,7 +48,7 @@ string get_size_agnostic_reg_name(RegisterAST::Ptr reg);
 bool operand_is_immediate(Operand operand);
 bool instruction_is_syscall(Instruction::Ptr instr);
 bool instruction_is_mov(Instruction::Ptr instr);
-bool instruction_is_self_xor(Instruction::Ptr instr, Address addr);
+bool instruction_is_self_xor(Instruction::Ptr instr);
 uint32_t get_immediate_value(Operand op);
 
 void print_block(Block *block);
