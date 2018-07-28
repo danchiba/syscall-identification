@@ -32,6 +32,7 @@ class Syscall
 	Address eax_address;
 	Block *sc_block;
 	void get_value_in_register(Block *curr_block, string reg, Address start_from, vector<Block *> *visited, vector<int> *possible_sc_nums);
+	vector<int> *lookup_sc_numbers(void);
 
   public:
 	Syscall(Function *func, Block *block, Instruction::Ptr &instr, uint64_t addr);
@@ -40,7 +41,6 @@ class Syscall
 	Address get_address(void);
 	Instruction::Ptr get_instruction(void);
 	vector<int> get_possible_sc_nos(void);
-	vector<int> lookup_sc_numbers(void);
 };
 
 bool instruction_assigns_to_register(Instruction::Ptr instr, string reg);
@@ -52,6 +52,9 @@ bool instruction_is_self_xor(Instruction::Ptr instr);
 uint32_t get_immediate_value(Operand op);
 
 void print_block(Block *block);
+void verbose_print(map<Address, vector<int>> syscall_list);
+void cmake_print(map<Address, vector<int>> syscall_list);
+void unique_print(map<Address, vector<int>> syscall_list);
 
 enum class Registers
 {
@@ -70,6 +73,13 @@ enum class Registers
 	r13,
 	r14,
 	r15
+};
+
+enum class output_type
+{
+	sparse,
+	unique_only,
+	full
 };
 
 #endif /* SYSCALL_IDENTIFICATION_H */

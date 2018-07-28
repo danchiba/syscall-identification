@@ -1,3 +1,12 @@
+/** 
+ * instruction_parser.cpp
+ * Contains various functions for determining the certain properties of instructions
+ * and operands. Built-in functionality from Dyninst can be useful in some cases, but
+ * for others, we need to parse strings ourselves.
+ * 
+ * @author Daniel Chiba
+ */
+
 #include "syscall_identification.hpp"
 
 bool is_desired_register(RegisterAST::Ptr reg, string reg_name)
@@ -63,7 +72,6 @@ bool instruction_is_mov(Instruction::Ptr instr)
 
 bool instruction_is_self_xor(Instruction::Ptr instr)
 {
-    //printf("Self XOR check for %lx: %s\n", addr, instr->format().c_str());
     entryID op = instr->getOperation().getID();
     if (op == e_xor)
     {
@@ -77,6 +85,9 @@ bool instruction_is_self_xor(Instruction::Ptr instr)
     return false;
 }
 
+/* Returns the immediate value represented by the operand. Assumes 32 
+   bits because we never need more than that for a system call number.
+   Also assumes that the operand is indeed an immediate value. */
 uint32_t get_immediate_value(Operand op)
 {
     Result res = op.getValue()->eval();
@@ -85,7 +96,7 @@ uint32_t get_immediate_value(Operand op)
         uint32_t scval = res.convert<uint32_t>();
         return scval;
     }
-    else
+    else /* Never encountered this situation */
     {
         printf("Error with result type!\n");
         return 4567;

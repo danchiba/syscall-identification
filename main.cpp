@@ -1,24 +1,34 @@
 #include "syscall_identification.hpp"
 
 vector<Syscall *> *get_all_syscalls(CodeObject *codeObject);
-void create_syscall_num_list(vector<Syscall *> *syscall_list);
+void print_syscalls(map<Address, vector<int>> syscall_list, bool cmake_output);
 
 int main(int argc, char *argv[])
 {
-	if (argc != 2)
+	bool cmake_output;
+
+	if (argc < 2)
 	{
-		printf("Usage: %s <path-to-application-binary>\n", argv[0]);
+		printf("Usage: %s <path-to-application-binary> [cmake]\n", argv[0]);
 		return -1;
 	}
 	char *progName = argv[1];
-	string progNameStr(progName);
 
+	if (argc >= 3 && !strcmp(argv[2], "cmake"))
+	{
+		cmake_output = true;
+	}
+	else
+	{
+		cmake_output = false;
+	}
+
+	/* Set up Dyninst data structures */
 	SymtabCodeSource *sts;
 	CodeObject *co;
 	SymtabAPI::Symtab *symTab;
-	vector<Syscall *> *syscall_list;
 
-	if (!SymtabAPI::Symtab::openFile(symTab, progNameStr))
+	if (!SymtabAPI::Symtab::openFile(symTab, progName))
 	{
 		cout << "File can not be parsed\n";
 		return -1;
@@ -28,25 +38,40 @@ int main(int argc, char *argv[])
 	co = new CodeObject(sts);
 	co->parse();
 
-	syscall_list = get_all_syscalls(co);
-	printf("%zd syscalls found\n", syscall_list->size());
+	vector<Syscall *> *syscalls = get_all_syscalls(co);
+	if (!cmake_output)
+	{
+		printf("%zd syscalls found\n", syscalls->size());
+	}
 
-	create_syscall_num_list(syscall_list);
+	map<Address, vector<int>> syscall_nos;
+	for (auto s = syscalls->begin(); s != syscalls->end(); ++s)
+	{
+		Syscall *sc = *s;
+		syscall_nos[sc->get_address()] = sc->get_possible_sc_nos();
+	}
+
+	print_syscalls(syscall_nos, cmake_output);
+
+	delete syscalls, symTab, co, sts;
 	return 0;
 }
 
+/* Creates a Syscall object for each syscall that's found 
+   and returns a list of the same */
 vector<Syscall *> *get_all_syscalls(CodeObject *codeObject)
 {
-	vector<Syscall *> *syscall_list = new vector<Syscall *>;
+	vector<Syscall *> *syscalls = new vector<Syscall *>;
 
 	const CodeObject::funclist &funcs = codeObject->funcs();
 	if (funcs.size() == 0)
 	{
 		cout << "No functions in file\n";
-		exit(1);
+		exit(-1);
 	}
-	//cout << funcs.size() << " functions found\n";
 
+	/* Iterate over every instruction within every basic block within 
+	   every function to find "syscall" instructions */
 	for (auto f1 = funcs.begin(); f1 != funcs.end(); ++f1)
 	{
 		Function *f = *f1;
@@ -60,7 +85,7 @@ vector<Syscall *> *get_all_syscalls(CodeObject *codeObject)
 
 			if (instructions.size() == 0)
 			{
-				cout << "No instructions";
+				cout << "No instructions in block";
 				continue;
 			}
 
@@ -69,50 +94,29 @@ vector<Syscall *> *get_all_syscalls(CodeObject *codeObject)
 				Instruction::Ptr instr = k->second;
 				uint64_t addr = k->first;
 
-				bool already_caught = any_of(syscall_list->begin(), syscall_list->end(),
+				/* Some blocks overlap, so there might be an instruction that's part of mulitiple blocks */
+				bool already_caught = any_of(syscalls->begin(), syscalls->end(),
 											 [&](Syscall *s) { return addr == s->get_address(); });
 				if (instruction_is_syscall(instr) and !already_caught)
 				{
 					Syscall *sc = new Syscall(f, bb, instr, addr);
-					syscall_list->push_back(sc);
+					syscalls->push_back(sc);
 				}
 			}
 		}
 	}
-	return syscall_list;
+	return syscalls;
 }
 
-void create_syscall_num_list(vector<Syscall *> *syscall_list)
+void print_syscalls(map<Address, vector<int>> syscall_list, bool cmake_output)
 {
-	vector<int> sc_num_list;
-	for (auto i = syscall_list->begin(); i != syscall_list->end(); ++i)
+	if (cmake_output)
 	{
-		Syscall *sc = *i;
-		vector<int> possible_scs = sc->get_possible_sc_nos();
-
-		if (any_of(possible_scs.begin(), possible_scs.end(), [](int n) { return n < 0; }))
-		{
-			// printf("Using lookup for syscall at %#lx\n", sc->get_address());
-			possible_scs = sc->lookup_sc_numbers();
-		}
-
-		//printf("For syscall at %#lx:\n", sc->get_address());
-		for (auto j = possible_scs.begin(); j != possible_scs.end(); ++j)
-		{
-			int no = *j;
-			// printf("Found syscall #%d\n", no);
-			if (!any_of(sc_num_list.begin(), sc_num_list.end(), [no](int n) { return n == no; }))
-			{
-				auto pos = upper_bound(sc_num_list.begin(), sc_num_list.end(), no);
-				sc_num_list.insert(pos, no);
-			}
-		}
+		cmake_print(syscall_list);
 	}
-
-	printf("%zd unique syscalls were detected:\n", sc_num_list.size());
-	// for (auto i = sc_num_list.begin(); i != sc_num_list.end(); ++i)
-	// {
-	// 	printf("%d\n", *i);
-	// }
-	cout << endl;
+	else
+	{
+		verbose_print(syscall_list);
+		unique_print(syscall_list);
+	}
 }
